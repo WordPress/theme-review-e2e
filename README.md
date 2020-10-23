@@ -1,6 +1,6 @@
 # WordPress Theme Review Test
 
-This project will run E2E tests on a theme in preparation for the WordPress.Org theme review. This project only triggers an GitHub action that runs the test.
+This project will run E2E tests on a theme in preparation for the WordPress.org theme review. This project only triggers an GitHub action that runs the test.
 
 ## To trigger the actions on GitHub
 
