@@ -19,6 +19,7 @@ jobs:
         root-folder: ${{ github.event.client_payload.theme_slug }}
         accessible-ready: ${{ github.event.client_payload.accessible_ready }}
     - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
       with:
         name: Screenshots
         path: ${{ steps.test.outputs.screenshots }}
