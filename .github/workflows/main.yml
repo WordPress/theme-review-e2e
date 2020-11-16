@@ -20,7 +20,7 @@ jobs:
       
     - name: Test My Theme
       id: test
-      uses: StevenDufresne/wp-theme-validation-action-experiment@main
+      uses: WordPress/theme-review-action@trunk
       with:
         root-folder: ${{ github.event.client_payload.theme_slug }}
         accessible-ready: ${{ github.event.client_payload.accessible_ready }}
