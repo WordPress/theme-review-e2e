@@ -30,3 +30,8 @@ jobs:
         name: Screenshots
         path: ${{ steps.test.outputs.screenshots }}
         retention-days: 5
+    - uses: actions/upload-artifact@v2
+      if: ${{ always() }}
+      with:
+        name: Logs
+        path: ${{ steps.test.outputs.logs }}
