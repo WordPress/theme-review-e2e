@@ -34,4 +34,11 @@ jobs:
       if: ${{ always() }}
       with:
         name: Logs
-        path: ${{ steps.test.outputs.logs }}
+        path: ${{ steps.test.outputs.logs }}   
+    - name: Post UI Errors
+      if: github.event.client_payload.trac_priority === 'update' ## Only do it for updates for now.
+      run: |
+        curl --request POST \
+          --url 'https://wordpress.org/themes/wp-json/themes/v1/github/${{ github.event.client_payload.theme_slug }}/${{ github.event.client_payload.trac_ticket_id }}' \
+          --header 'Authorization: Bearer ${{ secrets.ORG_POST_SECRET }}' \
+          --data-urlencode "@${{ steps.test.outputs.logs }}/ui-check-errors.txt"
