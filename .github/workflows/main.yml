@@ -17,6 +17,11 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '12'
+        
+    - name: Print Environment
+      env:
+          GITHUB_EVENT: ${{ toJSON(github.event.client_payload) }}
+      run: echo "$GITHUB_EVENT"
       
     - name: Test My Theme
       id: test
