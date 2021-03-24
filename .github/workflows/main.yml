@@ -32,8 +32,8 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: ${{ always() }}
       with:
-        name: Screenshots
-        path: ${{ steps.test.outputs.screenshots }}
+        name: UI Check Output
+        path: ${{ steps.test.outputs.ui-check-output }}
         retention-days: 5
     - uses: actions/upload-artifact@v2
       if: ${{ always() }}
