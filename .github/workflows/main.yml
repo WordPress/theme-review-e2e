@@ -25,7 +25,7 @@ jobs:
       
     - name: Test My Theme
       id: test
-      uses: WordPress/theme-review-action@try/use-a-reporter
+      uses: WordPress/theme-review-action@trunk
       with:
         root-folder: ${{ github.event.client_payload.theme_slug }}
         accessible-ready: ${{ github.event.client_payload.accessible_ready }}
