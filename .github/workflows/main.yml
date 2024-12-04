@@ -28,13 +28,13 @@ jobs:
       with:
         root-folder: ${{ github.event.client_payload.theme_slug }}
         accessible-ready: ${{ github.event.client_payload.accessible_ready }}
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: UI Check Output
         path: ${{ steps.test.outputs.ui-check-output }}
         retention-days: 5
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       if: ${{ always() }}
       with:
         name: Logs
