@@ -82,9 +82,7 @@ jobs:
         TRAC_TICKET_ID: ${{ github.event.client_payload.trac_ticket_id }}
         ORG_POST_SECRET: ${{ secrets.ORG_POST_SECRET }}
       run: |
-        # The log is written with leading blank lines, so a body can be
-        # non-empty and still hold nothing the endpoint will accept.
-        if ! grep -q '[^[:space:]]' body.txt; then
+        if [ ! -s body.txt ]; then
           echo "No UI errors to report; nothing to post."
           exit 0
         fi
