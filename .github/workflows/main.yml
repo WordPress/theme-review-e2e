@@ -62,13 +62,18 @@ jobs:
 
     - name: Prepare the request body
       run: |
-        : > body.txt
-        if [ -f logs/ui-check-errors.txt ]; then
-          # Keep the tail: the review job appends its findings to this file, so
-          # the end is the part worth having if it needs truncating.
-          tail -c 65536 logs/ui-check-errors.txt > body.txt
+        if [ ! -f logs/ui-check-errors.txt ]; then
+          echo "::error::logs/ui-check-errors.txt was missing from the review artifact."
+          exit 1
+        fi
+
+        if [ "$(wc -c < logs/ui-check-errors.txt)" -gt 65536 ]; then
+          # Keep the tail, since the review job appends its findings. Drop the
+          # first line with it: cutting on a byte offset can leave a partial
+          # UTF-8 sequence that the endpoint would reject.
+          tail -c 65536 logs/ui-check-errors.txt | tail -n +2 > body.txt
         else
-          echo "::warning::logs/ui-check-errors.txt was missing from the review artifact."
+          cp logs/ui-check-errors.txt body.txt
         fi
 
     - name: Post UI Errors
@@ -77,7 +82,9 @@ jobs:
         TRAC_TICKET_ID: ${{ github.event.client_payload.trac_ticket_id }}
         ORG_POST_SECRET: ${{ secrets.ORG_POST_SECRET }}
       run: |
-        if [ ! -s body.txt ]; then
+        # The log is written with leading blank lines, so a body can be
+        # non-empty and still hold nothing the endpoint will accept.
+        if ! grep -q '[^[:space:]]' body.txt; then
           echo "No UI errors to report; nothing to post."
           exit 0
         fi
