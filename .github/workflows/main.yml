@@ -64,7 +64,11 @@ jobs:
       run: |
         : > body.txt
         if [ -f logs/ui-check-errors.txt ]; then
-          head -c 65536 logs/ui-check-errors.txt > body.txt
+          # Keep the tail: the review job appends its findings to this file, so
+          # the end is the part worth having if it needs truncating.
+          tail -c 65536 logs/ui-check-errors.txt > body.txt
+        else
+          echo "::warning::logs/ui-check-errors.txt was missing from the review artifact."
         fi
 
     - name: Post UI Errors
@@ -73,7 +77,12 @@ jobs:
         TRAC_TICKET_ID: ${{ github.event.client_payload.trac_ticket_id }}
         ORG_POST_SECRET: ${{ secrets.ORG_POST_SECRET }}
       run: |
-        curl --request POST \
+        if [ ! -s body.txt ]; then
+          echo "No UI errors to report; nothing to post."
+          exit 0
+        fi
+
+        curl --fail-with-body --silent --show-error --request POST \
           --url "https://wordpress.org/themes/wp-json/themes/v1/github/${THEME_SLUG}/${TRAC_TICKET_ID}" \
           --header "Authorization: Bearer ${ORG_POST_SECRET}" \
           --data-urlencode "@body.txt"
