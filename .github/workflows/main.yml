@@ -1,27 +1,33 @@
 
-name: Theme Review 
+name: Theme Review
 
 on: repository_dispatch
 
+permissions: {}
+
 jobs:
-  run_tests:
+  review:
+    name: Review the submitted theme
     runs-on: ubuntu-latest
+    permissions: {}
 
     steps:
     - name: Download Theme
+      env:
+        THEME_ZIP: ${{ github.event.client_payload.theme_zip }}
       run: |
-        curl -L -o theme.zip "${{ github.event.client_payload.theme_zip }}"
+        curl -L -o theme.zip "$THEME_ZIP"
         unzip theme.zip
-  
+
     - uses: actions/setup-node@v4
       with:
         node-version: 20
-        
+
     - name: Print Environment
       env:
           GITHUB_EVENT: ${{ toJSON(github.event.client_payload) }}
       run: echo "$GITHUB_EVENT"
-      
+
     - name: Test My Theme
       id: test
       uses: WordPress/theme-review-action@trunk
@@ -38,12 +44,36 @@ jobs:
       if: ${{ always() }}
       with:
         name: Logs
-        path: ${{ steps.test.outputs.logs }}   
+        path: ${{ steps.test.outputs.logs }}
+
+  post:
+    name: Post the results to WordPress.org
+    needs: review
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: Logs
+        path: logs
+
+    - name: Prepare the request body
+      run: |
+        : > body.txt
+        if [ -f logs/ui-check-errors.txt ]; then
+          head -c 65536 logs/ui-check-errors.txt > body.txt
+        fi
+
     - name: Post UI Errors
-      if: |
-        ${{ always() }}       
+      env:
+        THEME_SLUG: ${{ github.event.client_payload.theme_slug }}
+        TRAC_TICKET_ID: ${{ github.event.client_payload.trac_ticket_id }}
+        ORG_POST_SECRET: ${{ secrets.ORG_POST_SECRET }}
       run: |
         curl --request POST \
-          --url 'https://wordpress.org/themes/wp-json/themes/v1/github/${{ github.event.client_payload.theme_slug }}/${{ github.event.client_payload.trac_ticket_id }}' \
-          --header 'Authorization: Bearer ${{ secrets.ORG_POST_SECRET }}' \
-          --data-urlencode "@${{ steps.test.outputs.logs }}/ui-check-errors.txt"
+          --url "https://wordpress.org/themes/wp-json/themes/v1/github/${THEME_SLUG}/${TRAC_TICKET_ID}" \
+          --header "Authorization: Bearer ${ORG_POST_SECRET}" \
+          --data-urlencode "@body.txt"
