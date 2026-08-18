@@ -30,7 +30,7 @@ jobs:
 
     - name: Test My Theme
       id: test
-      uses: WordPress/theme-review-action@ce41d94137a8e028d3bf78048f0d3503dde88579 # trunk as of 2026-08-18
+      uses: WordPress/theme-review-action@318c64c495cbbebb8c899acf6fbb99ac849ec7bb # trunk as of 2026-08-18
       with:
         root-folder: ${{ github.event.client_payload.theme_slug }}
         accessible-ready: ${{ github.event.client_payload.accessible_ready }}
