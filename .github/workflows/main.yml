@@ -30,7 +30,7 @@ jobs:
 
     - name: Test My Theme
       id: test
-      uses: WordPress/theme-review-action@trunk
+      uses: WordPress/theme-review-action@318c64c495cbbebb8c899acf6fbb99ac849ec7bb # trunk as of 2026-08-18
       with:
         root-folder: ${{ github.event.client_payload.theme_slug }}
         accessible-ready: ${{ github.event.client_payload.accessible_ready }}
@@ -62,9 +62,18 @@ jobs:
 
     - name: Prepare the request body
       run: |
-        : > body.txt
-        if [ -f logs/ui-check-errors.txt ]; then
-          head -c 65536 logs/ui-check-errors.txt > body.txt
+        if [ ! -f logs/ui-check-errors.txt ]; then
+          echo "::error::logs/ui-check-errors.txt was missing from the review artifact."
+          exit 1
+        fi
+
+        if [ "$(wc -c < logs/ui-check-errors.txt)" -gt 65536 ]; then
+          # Keep the tail, since the review job appends its findings. Drop the
+          # first line with it: cutting on a byte offset can leave a partial
+          # UTF-8 sequence that the endpoint would reject.
+          tail -c 65536 logs/ui-check-errors.txt | tail -n +2 > body.txt
+        else
+          cp logs/ui-check-errors.txt body.txt
         fi
 
     - name: Post UI Errors
@@ -73,7 +82,12 @@ jobs:
         TRAC_TICKET_ID: ${{ github.event.client_payload.trac_ticket_id }}
         ORG_POST_SECRET: ${{ secrets.ORG_POST_SECRET }}
       run: |
-        curl --request POST \
+        if [ ! -s body.txt ]; then
+          echo "No UI errors to report; nothing to post."
+          exit 0
+        fi
+
+        curl --fail-with-body --silent --show-error --request POST \
           --url "https://wordpress.org/themes/wp-json/themes/v1/github/${THEME_SLUG}/${TRAC_TICKET_ID}" \
           --header "Authorization: Bearer ${ORG_POST_SECRET}" \
           --data-urlencode "@body.txt"
