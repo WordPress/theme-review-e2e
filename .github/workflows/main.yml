@@ -19,9 +19,9 @@ jobs:
         curl -L -o theme.zip "$THEME_ZIP"
         unzip theme.zip
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
-        node-version: 20
+        node-version: 24
 
     - name: Print Environment
       env:
@@ -30,17 +30,17 @@ jobs:
 
     - name: Test My Theme
       id: test
-      uses: WordPress/theme-review-action@84400b232998116c9d1651502575c60262cceef9 # trunk as of 2026-08-24
+      uses: WordPress/theme-review-action@62e23982fe635cc21bccf7d738cb1311dff851f2 # trunk as of 2026-08-31
       with:
         root-folder: ${{ github.event.client_payload.theme_slug }}
         accessible-ready: ${{ github.event.client_payload.accessible_ready }}
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: ${{ always() }}
       with:
         name: UI Check Output
         path: ${{ steps.test.outputs.ui-check-output }}
         retention-days: 5
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: ${{ always() }}
       with:
         name: Logs
@@ -55,7 +55,7 @@ jobs:
       actions: read
 
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: Logs
         path: logs
